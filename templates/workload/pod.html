@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block nav-item-2 %}layui-nav-itemed{% endblock %}
+{% block nav-this-2-4 %}layui-this{% endblock %}
+{% block title %}
+      pod
+{% endblock %}
+
+{% block content %}
+
+
+<div class="layui-row">
+
+  <div class="layui-col-md12">
+
+
+    <div class="layui-card">
+        <span class="layui-breadcrumb" style="margin-left: 8px">
+              <a href="#">首页</a>
+              <a href="#">工作负载</a>
+              <a><cite>Pods</cite></a>
+        </span>
+        <div class="layui-card-body">
+          <div style="padding: 16px;">
+              <div class="layui-inline">
+                    <input class="layui-input" name="namespace" id="searchPOD" autocomplete="off" placeholder="请输入名称">
+              </div>
+              <button type="button" class="layui-btn layui-bg-blue" id="searchbtn">搜索</button>
+              <table class="layui-hide" id="podtab" lay-filter="pod"></table>
+          </div>
+
+            <!-- 操作栏绑定 -->
+            <script type="text/html" id="barDemo">
+              <div class="layui-clear-space">
+                <a class="layui-btn layui-btn-xs layui-btn-primary" lay-event="yaml">YAML</a>
+                <a class="layui-btn layui-btn-xs layui-btn-primary" lay-event="terminal">查看日志</a>
+                <a class="layui-btn layui-btn-xs " lay-event="terminal"  style="color: #FFF;background-color: #385985">终端</a>
+                <a class="layui-btn layui-btn-xs layui-bg-red" lay-event="delete">删除</a>
+              </div>
+            </script>
+        </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+
+{% block js %}
+
+<script>
+layui.use(['table', 'form', 'layer'], function(){
+  var table = layui.table;
+  var layer = layui.layer;
+  var $ = layui.jquery;
+  var csrf_token = $('input[name="csrfmiddlewaretoken"]').val()
+  var storage_seesion = window.sessionStorage
+  var namespace = storage_seesion.getItem('namespace')
+  // 创建渲染实例
+  table.render({
+    elem: '#podtab',
+    url: "{% url 'pod_api' %}?namespace=" + namespace,
+    toolbar: '#toolbarDemo',
+    defaultToolbar: ['filter', 'exports', 'print'],
+    {#height: 'full-125', // 最大高度减去其他容器已占有的高度差#}
+    cellMinWidth: 80,
+    page: true,
+    cols: [[
+      {field:'name',  title: '名称', },
+      {field:'namespace',  title: '命名空间', },
+      {field: 'pod_ip', title: 'pod地址'},
+      {field:'status',  title: '状态'},
+      {field:'labels',  title: 'Pod标签', templet: labelFomat },
+      {field:'container',title: '容器', templet: containerFomat},
+      {field:'create_time', title:'创建时间', },
+      {fixed: 'right', title:'操作', width: 230, toolbar: '#barDemo'}
+    ]],
+    id: 'POD',
+  })
+
+
+  //格式化标签
+  function labelFomat(d) {
+      res = ''
+      for (key in d.labels) {
+          res += '<span style="border: 1px solid darkgrey;border-radius: 5px" >' + key + ': ' + d.labels[key] + '</span> <br> '
+      }
+      return res
+  }
+
+   function containerFomat(d) {
+      res = ''
+      if (d.container){
+          for (let key in d.container) {
+              data = d.container[key]
+              res += key + ':' + data.c_name + '=' + data.c_image + ' <br/>' +
+                     '重启次数' + ':' + data.restart_count + ' <br/>' +
+                     '状态' + ':' + data.c_status + ' <br/>'
+          }
+          return res
+      } else {
+          return 'None'
+      }
+
+  }
+    
+    //触发单元格工具事件
+  table.on('tool(pod)', function(obj){ // 双击 toolDouble
+    var data = obj.data;
+    if(obj.event === 'delete'){
+      layer.confirm('真的删除' + data.name + '这个Pod吗?' , function(index){
+
+        //ajax去掉接口删除
+        $.ajax({
+             type: "DELETE",
+              url: "{% url 'deployment_api' %}",
+              data: data,
+              headers: {'X-CSRFToken': csrf_token},
+              success: function (result) {
+                  if (result.code == '0') {
+                      obj.del() //前端页面删除，清除缓存
+                      layer.msg(result.msg, {icon: 6})
+                  } else {
+                      layer.msg(result.msg, {icon: 5})
+                  }
+              },
+              error: function () {
+                  layer.msg("服务器接口异常！", {icon: 5})
+              }
+          });
+        layer.close(index);
+      });
+    } else if(obj.event === 'yaml'){
+      layer.open({
+        title: 'YAML',
+        type: 2,
+        area: ['50%','80%'],
+        content: '{% url 'ace_editor' %}?resource=pod&' + 'namespace=' + data.namespace + '&name=' + data.name
+      });
+    }else if(obj.event === 'terminal'){
+        // 逗号拼接容器名, 例如containers=c1,c2
+        cs = data['container'];
+        containers = "";
+        for(let c in cs) {
+            if (cs.length > 1) {
+                containers += cs[c]['c_name'] + ","
+            } else {
+                containers += cs[c]['c_name']
+            }
+        }
+        layer.open({
+        title: '终端',
+        type: 2,
+        area: ['50%','80%'],
+        content: '{% url "terminal" %}?namespace=' + data["namespace"] + "&pod_name=" + data["name"] + "&containers=" + containers,
+      });
+    }
+  });
+
+
+
+  //监听搜索事件
+  $(document).on('click', '#searchbtn', function () {
+      search_val = $('#searchPOD').val()
+      table.reload('POD', {
+          page: {
+             curr: 1
+          }
+          ,where: {
+              SearchKey: search_val
+          }
+      });
+  })
+
+
+})
+
+</script>
+{% endblock %}

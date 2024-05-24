@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}
+      首页
+{% endblock %}
+
+{% block content %}
+<div class="layui-fluid">
+    <div class="layui-card">
+        <div class="layui-card-body">
+            <div class="layui-carousel" id="stepForm" lay-filter="stepForm" style="margin: 0 auto;">
+                <div carousel-item>
+                    <div style="padding-left: 9%">
+                        <form class="layui-form" style="margin: 0 auto;max-width: 100%;padding-top: 40px;">
+                                <div class="layui-input-inline" style="width: 10%">
+                                    <div class="layui-btn" id="mapAddress">地图选点</div>
+                                </div>
+                                <label class="layui-form-label">纬度:</label>
+                            </div>
+                            <div class="layui-form-item" style="padding-left: 38%">
+                                <div class="layui-input-inline">
+                                    <button class="layui-btn" lay-submit lay-filter="formStep">
+                                        &emsp;下一步&emsp;
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div style="padding-left: 22%">
+                        <form class="layui-form" style="margin: 0 auto;max-width: 100%;padding-top: 40px;">
+                            <div class="layui-form-item" style="max-width: 100%;">
+                                <label class="layui-form-label">开户行账号名称:</label>
+                                <div class="layui-input-inline" style="width: 20%">
+                                    <input type="text" name="bankAccountName"  class="layui-input" lay-verify="required"/>
+                                </div>
+                            </div>
+                            <div class="layui-form-item" style="padding-left: 16%">
+                                <div class="layui-input-block">
+                                    <button type="button" class="layui-btn layui-btn-primary pre">上一步</button>
+                                    <button class="layui-btn" lay-submit lay-filter="formStep2">下一步</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div style="padding-left: 22%">
+                        <form class="layui-form" style="margin: 0 auto;max-width: 100%;padding-top: 40px;">
+                            <div class="layui-form-item" style="max-width: 100%;">
+                                <label class="layui-form-label">联系电话:</label>
+                                <div class="layui-input-inline" style="width: 20%">
+                                    <input type="text" name="ownerManagerMobile" class="layui-input"/>
+                                </div>
+                            </div>
+                            <div class="layui-form-item" style="padding-left: 15%;padding-top: 8%">
+                                <div class="layui-input-block">
+                                    <button type="button" class="layui-btn layui-btn-primary pre">上一步</button>
+                                    <button class="layui-btn" type="submit" lay-submit="" lay-filter="add">提交信息</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="/static/layui-v2.9.8/step/step-lay/step.js"></script>
+<script>
+    var $ = layui.$
+    var step = layui.step
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    layui.config({
+        base: '/'
+    }).extend({
+        step:'/layui/step-lay/step'
+    }).use([ 'form', 'step', 'form', 'layer'], function () {
+        var params= {
+            parkId: null,
+            parkName: null,
+        }
+        step.render({
+            elem: '#stepForm',
+            filter: 'stepForm',
+            width: '100%', //设置容器宽度
+            stepWidth: '750px',
+            height: '500px',
+            stepItems: [{
+                title: '填写基本信息'
+            }, {
+                title: '填写停车场支付信息'
+            }, {
+                title: '填写联系信息'
+            }]
+        });
+        form.on('submit(formStep)', function (data) {
+            step.next('#stepForm');
+            params.parkId = data.field.parkId;
+            params.parkName = data.field.parkName;
+            return false;
+        });
+        form.on('submit(formStep2)', function (data) {
+            step.next('#stepForm');
+            params.tranChannel = data.field.tranChannel;
+            return false;
+        });
+        form.on('submit(add)', function (data) {
+            params.operateName = data.field.operateName;
+            CoreUtil.sendAjax("/parking/add", JSON.stringify(params), function (res) {
+                if(res.code == 0){
+                    layer.msg("添加成功");
+                }else{
+                    layer.msg("添加失败");
+                }
+                var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                parent.layer.close(index);
+            }, "POST", false);
+            return false;
+        });
+        //第一步
+        $('.pre').click(function () {
+            step.pre('#stepForm');
+        });
+        //下一步
+        $('.next').click(function () {
+            step.next('#stepForm');
+        });
+    });
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block nav-item-2 %}layui-nav-itemed{% endblock %}
+{% block nav-this-2-1 %}layui-this{% endblock %}
+{% block title %}
+创建deployment
+{% endblock %}
+
+{% block content %}
+
+
+<div class="layui-row">
+
+  <div class="layui-col-md12">
+
+
+    <div class="layui-card">
+        <span class="layui-breadcrumb" style="margin-left: 8px">
+              <a href="#">首页</a>
+              <a href="#">工作负载</a>
+              <a href="{% url 'deployment' %}">Deployments</a>
+              <a><cite>创建</cite></a>
+        </span>
+        <hr>
+
+    <div class="layui-fluid">
+        <div class="layui-card">
+            <div class="layui-card-body" style="padding-top: 40px;">
+                <div class="layui-carousel" id="stepForm" lay-filter="stepForm" style="margin: 0 auto;">
+                    <div carousel-item>
+                        <div>
+                            <form class="layui-form" style="margin: 0 auto;max-width: 460px;padding-top: 40px;">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">名称:</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="name" placeholder="名称" class="layui-input" lay-verify="required" />
+
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">命名空间:</label>
+                                    <div class="layui-input-block">
+                                        <input type="text"  name="namespace" value="" id="dep-ns" class="layui-input"  disabled>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">标签:</label>
+                                    <div class="layui-input-block">
+                                      <input type="text" name="labels" placeholder="示例： app=deployment-1，多个标签以逗号分隔"  value=""  class="layui-input"  >
+                                    </div>
+                                </div>
+                                 <div class="layui-form-item">
+                                    <label class="layui-form-label">副本:</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="replicas" placeholder="请输入副本数"  value=""  class="layui-input" lay-verify="required"  >
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">标签选择器:</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="selector" placeholder="示例： app=deployment-1，多个标签以逗号分隔"  value=""  class="layui-input" lay-verify="required"  >
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">pod标签:</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="pod_labels" placeholder="示例： app=deployment-1，多个标签以逗号分隔"  value=""  class="layui-input" lay-verify="required|confirmlabels"  >
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block">
+                                        <button type="button" class="layui-btn" lay-submit lay-filter="formStep1">
+                                            &emsp;下一步&emsp;
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                       <div>
+                            <form class="layui-form" style="margin: 0 auto;max-width: 460px;padding-top: 40px;">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">镜像:</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="image" placeholder="请输入镜像" class="layui-input" lay-verify="required" />
+
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">容器名称:</label>
+                                    <div class="layui-input-block">
+                                        <input type="text"  name="c_name" value=""  class="layui-input"  lay-verify="required">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">标签:</label>
+                                    <div class="layui-input-block">
+                                      <input type="text" name="labels" placeholder="示例： app=deployment-1，多个标签以逗号分隔"  value=""  class="layui-input"  >
+                                    </div>
+                                </div>
+                                 <div class="layui-form-item">
+                                    <label class="layui-form-label">副本:</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="replicas" placeholder="请输入副本数"  value=""  class="layui-input" lay-verify="required"  >
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">标签选择器:</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="selector" placeholder="示例： app=deployment-1，多个标签以逗号分隔"  value=""  class="layui-input" lay-verify="required"  >
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">pod标签:</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="pod_labels" placeholder="示例： app=deployment-1，多个标签以逗号分隔"  value=""  class="layui-input" lay-verify="required|confirmlabels"  >
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block">
+                                        <button type="button" class="layui-btn" lay-submit lay-filter="formStep1">
+                                            &emsp;下一步&emsp;
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+
+{% block js %}
+<script src="/static/layui-v2.9.8/step/layui/layui.js"></script>
+<script src="/static/layui-v2.9.8/step/step-lay/step.js"></script>
+<script>
+
+
+ layui.config({
+            base:'/static/layui-v2.9.8/step/step-lay/'
+        }).use([ 'form', 'step', 'layer'], function () {
+            var $ = layui.$
+                , form = layui.form
+                , step = layui.step
+                , layer = layui.layer;
+
+            var storage = window.sessionStorage
+            var namespace = storage.getItem('namespace')
+            $('#dep-ns').val(namespace)
+
+            parma = {}
+
+            form.verify({
+
+                //验证标签选择器与pod标签是否一致
+                confirmlabels : function(value, elem) {
+                    if ($('input[name=selector]').val() !== value) {
+
+                         return '标签选择器与pod标签必须一致';
+                    }
+
+                },
+
+            })
+
+
+
+            step.render({
+                elem: '#stepForm',
+                filter: 'stepForm',
+                width: '100%', //设置容器宽度
+                stepWidth: '750px',
+                height: '500px',
+                stepItems: [{
+                    title: 'Deployment基础信息'
+                }, {
+                    title: 'containers基础信息'
+                }, {
+                    title: 'containers特殊信息'
+                },]
+            });
+
+
+            form.on('submit(formStep1)', function (data) {
+                step.next('#stepForm');
+                parma.meta = data.field
+                return false;
+            });
+
+            form.on('submit(formStep2)', function (data) {
+                step.next('#stepForm');
+                return false;
+            });
+
+            $('.pre').click(function () {
+                step.pre('#stepForm');
+            });
+
+        })
+</script>
+{% endblock %}

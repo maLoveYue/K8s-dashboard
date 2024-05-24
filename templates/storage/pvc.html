@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block nav-item-4 %}layui-nav-itemed{% endblock %}
+{% block nav-this-4-1 %}layui-this{% endblock %}
+{% block title %}
+      pvc
+{% endblock %}
+
+{% block content %}
+
+</div>
+
+<div class="layui-row">
+
+  <div class="layui-col-md12">
+
+
+    <div class="layui-card">
+        <span class="layui-breadcrumb" style="margin-left: 8px">
+              <a href="#">首页</a>
+              <a href="#">存储与配置</a>
+              <a><cite>PersistentVolumeClaims</cite></a>
+        </span>
+        <div class="layui-card-body">
+          <div style="padding: 16px;">
+              <a class="layui-btn " href="#" style="margin-left: 2px" >创建</a>
+              <div class="layui-inline">
+                    <input class="layui-input" name="namespace" id="searchPvc" autocomplete="off" placeholder="请输入名称">
+              </div>
+              <button class="layui-btn layui-bg-blue" id="searchbtn">搜索</button>
+              <table class="layui-hide" id="pvctab" lay-filter="pvc"></table>
+          </div>
+
+            <!-- 操作栏绑定 -->
+            <script type="text/html" id="barDemo">
+              <div class="layui-clear-space">
+                <a class="layui-btn layui-btn-sm layui-btn-primary" lay-event="yaml">YAML</a>
+                <a class="layui-btn layui-btn-sm layui-bg-red" lay-event="delete">删除</a>
+              </div>
+            </script>
+        </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+
+{% block js %}
+
+<script>
+layui.use(['table',  'layer'], function(){
+  var table = layui.table;
+  var layer = layui.layer;
+  var $ = layui.jquery;
+
+  storage = window.sessionStorage
+  var namespace = storage.getItem('namespace')
+  var csrf_token = $('input[name="csrfmiddlewaretoken"]').val()
+
+  // 创建渲染实例
+  table.render({
+    elem: '#pvctab',
+    url: "{% url 'pvc_api' %}?namespace=" + namespace, // 请求namespace-api接口
+    toolbar: '#toolbarDemo',
+    defaultToolbar: ['filter', 'exports', 'print'],
+    {#height: 'full-125', // 最大高度减去其他容器已占有的高度差#}
+    cellMinWidth: 80,
+    page: true,
+    cols: [[
+      {field:'name',  title: '名称', },
+      {field:'namespace',  title: '命名空间'},
+      {field:'status',  title: '状态'},
+      {field:'volume_name',  title: '存储卷'},
+      {field:'access_modes',  title: '访问模式'},
+      {field:'storage_class_name',  title: '存储类'},
+      {field:'labels',title: '标签',  templet: labelFomat},
+      {field:'create_time', title:'创建时间', },
+      {fixed: 'right', title:'操作', width: 170, toolbar: '#barDemo'}
+    ]],
+    id: 'Pvc',
+  })
+
+  //格式化标签
+  function labelFomat(d) {
+      res = ''
+      if (d.labels == null){
+          res = '-'
+      }else {
+          for (key in d.labels) {
+            res += '<span style="border: 1px solid darkgrey;border-radius: 5px" >' + key + ': ' + d.labels[key] + '</span> <br> '
+          }
+      }
+
+      return res
+  }
+
+    //触发单元格工具事件
+  table.on('tool(pvc)', function(obj){ // 双击 toolDouble
+    var data = obj.data;
+    if(obj.event === 'delete'){
+      layer.confirm('真的删除' + data.name + '这个PVC吗?' , function(index){
+
+        //ajax去掉接口删除
+        $.ajax({
+             type: "DELETE",
+              url: "{% url 'namespace-api' %}",
+              data: data,
+              headers: {'X-CSRFToken': csrf_token},
+              success: function (result) {
+                  if (result.code == '0') {
+                      obj.del() //前端页面删除，清除缓存
+                      layer.msg(result.msg, {icon: 6})
+                  } else {
+                      layer.msg(result.msg, {icon: 5})
+                  }
+              },
+              error: function () {
+                  layer.msg("服务器接口异常！", {icon: 5})
+              }
+          });
+        layer.close(index);
+      });
+    } else if(obj.event === 'yaml'){
+      layer.open({
+        title: 'YAML',
+        type: 2,
+        area: ['50%','80%'],
+        content: '{% url 'ace_editor' %}?resource=pvc&' + 'namespace=' + data.namespace + '&name=' + data.name
+      });
+    }
+  });
+
+
+
+  //监听搜索事件
+  $(document).on('click', '#searchbtn', function () {
+      search_val = $('#searchPvc').val()
+      table.reload('Pvc', {
+          page: {
+             curr: 1
+          }
+          ,where: {
+              SearchKey: search_val
+          }
+      });
+  })
+
+})
+
+</script>
+{% endblock %}
